@@ -32,9 +32,9 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * When all default values are used, the result is essentially a single [Channel] with [Channel.RENDEZVOUS] capacity. */
 class PartitionedMultiChannel<E>(
-    val totalPartitions: Int = DEFAULT_TOTAL_GROUPS,
+    val totalPartitions: Int = DEFAULT_PARTITIONS,
     val partitionCapacity: Int = Channel.RENDEZVOUS,
-    val sorter: PartitionPolicy<E> = RoundRobinPartitionPolicy(totalPartitions)
+    val partioner: PartitionPolicy<E> = RoundRobinPartitionPolicy(totalPartitions)
 ) : Closeable, Iterable<Channel<E>> {
 
     private val channels = ArrayMultiChannel<E>(size = totalPartitions, capacity = partitionCapacity)
@@ -55,7 +55,7 @@ class PartitionedMultiChannel<E>(
     /** Adds [element] into to one of the underlying channels (according to the policy enforced by the [PartitionPolicy]
      * if it is possible to do so immediately without violating capacity restrictions and returns `true`. Otherwise, it
      * returns `false` immediately or throws exception if the channel [isClosedForSend]. */
-    fun offer(element: E): Boolean = channels[sorter(element)].offer(element)
+    fun offer(element: E): Boolean = channels[partioner(element)].offer(element)
 
     @ExperimentalCoroutinesApi
     val isClosedForSend: Boolean get() = channels.map { it.isClosedForSend }.all { it }
@@ -64,12 +64,12 @@ class PartitionedMultiChannel<E>(
     /** Adds an [element] into to one of the underlying channels (according to the policy enforced by the
      * [PartitionPolicy], suspending the caller while the buffer of the  channel is full or throws exception if the
      * channel [isClosedForSend]. */
-    suspend fun send(element: E) = channels[sorter(element)].send(element)
+    suspend fun send(element: E) = channels[partioner(element)].send(element)
 
     override fun iterator(): Iterator<Channel<E>> = channels.iterator()
 
     companion object {
-        const val DEFAULT_TOTAL_GROUPS = 1
+        const val DEFAULT_PARTITIONS = 1
     }
 }
 

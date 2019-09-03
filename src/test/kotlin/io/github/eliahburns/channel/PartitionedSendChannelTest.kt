@@ -10,18 +10,14 @@ import kotlin.random.Random
 /** A simple test to check for handling of mapping successes/failures and analysis with VisualVM */
 fun main() = runBlocking {
     println("starting")
-    val numPartitions = 3
-    val partitionedChannels = PartitionedMultiChannel(
+    val numPartitions = 100
+    val partitionedChannels = PartitionedMultiChannel<TestElement>(
         totalPartitions = numPartitions,
-        partitionCapacity = Channel.BUFFERED,
-        sorter = object : PartitionPolicy<TestElement> {
-            override fun invoke(p1: TestElement): Int = p1.group % numPartitions
-
-        }
-    )
+        partitionCapacity = Channel.BUFFERED) { element ->
+        element.key.hashCode() % numPartitions
+    }
 
     val testElements = produceTestElements(10000000000)
-
 
     launch(Dispatchers.IO) {
         for (testElement in testElements) {
@@ -33,10 +29,12 @@ fun main() = runBlocking {
         val merged = mapAndMergePartitions(
              partitions = partitionedChannels,
             capacity = 1_000
-        ) {
+        ) { elementToMap ->
             if (Random.nextBoolean()) {
-                it.copy(value = it.value * it.value)
+                // multiply its value by itself
+                elementToMap.copy(value = elementToMap.value * elementToMap.value)
             } else {
+                // randomly fail
                 throw RuntimeException("failed to transform value")
             }
         }
