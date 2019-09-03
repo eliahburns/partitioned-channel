@@ -1,59 +1,46 @@
 package io.github.eliahburns.channel
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.launch
 import java.io.Closeable
+import java.util.concurrent.atomic.AtomicInteger
 
 
+/** An [Array]-like class of iterable and random-accessible [Channel]s containing elements of type [E], in which
+ * [size] is an upfront fixed number of channels and [capacity] represents the desired buffer size for each channel. */
 class ArrayMultiChannel<E>(
-    val capacity: Int,
-    val capacityPerChannel: Int
-) : Closeable {
+    val size: Int = 1,
+    val capacity: Int = Channel.RENDEZVOUS
+) : Closeable, Iterable<Channel<E>> {
 
-    private val channels = arrayOfNulls<Channel<E>?>(capacity)
+    private val channels = arrayOfNulls<Channel<E>?>(size)
 
     init {
-        (0 until capacity).forEach { id -> channels[id] = Channel(capacityPerChannel) }
+        (0 until size).forEach { index -> channels[index] = Channel(capacity) }
     }
 
-    operator fun get(id: Int): Channel<E> {
-        check(id in 0 until capacity) { "channel id out of range" }
-        return channels[id]!!
+    /** Get a channel according to its index from within the underlying array of [Channel]s */
+    operator fun get(index: Int): Channel<E> {
+        check(index in 0 until size) { "channel index out of range" }
+        return channels[index]!!
     }
 
+    /** Close all [Channel]s within the array */
     override fun close() {
-        (0 until capacity).forEach { id -> channels[id]?.close() }
+        for (channel in this) channel.close()
     }
-}
 
+    /** An [Iterator] over the contained channels beginning at the head of the underlying [Array] */
+    override fun iterator(): Iterator<Channel<E>> = object : Iterator<Channel<E>> {
+        private var nextIndex = AtomicInteger(0)
 
-fun <E> CoroutineScope.merge(
-    channels: ArrayMultiChannel<E>
-): ReceiveChannel<E> = produce {
-    repeat(channels.capacity) { id ->
-        launch {
-            for (e in channels[id]) {
-                send(e)
-            }
+        override fun hasNext(): Boolean = nextIndex.get() < size
+
+        override fun next(): Channel<E> {
+            check(hasNext()) { "no remaining elements" }
+            val nextChannel = channels[nextIndex.get()]!!
+            nextIndex.incrementAndGet()
+            return nextChannel
         }
     }
 }
-
-fun <E, R> CoroutineScope.merge(
-    channels: ArrayMultiChannel<E>,
-    action: (E) -> R = { e -> e as R }
-): ReceiveChannel<R> = produce {
-    repeat(channels.capacity) { id ->
-        launch {
-            for (e in channels[id]) {
-                val r = action(e)
-                send(r)
-            }
-        }
-    }
-}
-
 
