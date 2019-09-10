@@ -1,4 +1,4 @@
-# Kotlin Partitioned Multi-Channel
+# Kotlin `PartitionedChannel`
 
 When wishing to parallelize some transformation or action over elements that are received in a `Channel` or `Flow`, 
 there may be some level of order that needs to be maintained within subsets of the elements that arrive.
