@@ -29,7 +29,7 @@ Each method takes a number of `partitions`, a `capacity` that is applied to each
 is applied to each element in the original source.
 
 
-## Example usage: 
+### Examples: 
 
 ```kotlin
 // decide upon a number of partitions and create a PartitionedMultiChannel
@@ -83,6 +83,44 @@ testElements
     .onEach { println(it) }
     .flowOn(Dispatchers.IO)
     .collect()
+```
+
+### Use
+
+##### Gradle
+
+###### Kotlin DSL
+```kotlin
+repositories {
+    maven(url = "https://dl.bintray.com/eliahburns/maven")
+}
+
+dependencies {
+    compile("io.github.eliahburns:partitioned-channel:0.1.0")
+}
+```
+
+###### Groovy DSL
+```groovy
+repositories {
+    maven {
+        url  "https://dl.bintray.com/eliahburns/maven" 
+    }
+}
+
+dependencies {
+    compile 'io.github.eliahburns:partitioned-channel:0.1.0'
+}
+```
+
+##### Maven
+```xml
+<dependency>
+	<groupId>io.github.eliahburns</groupId>
+	<artifactId>partitioned-channel</artifactId>
+	<version>0.1.0</version>
+	<type>pom</type>
+</dependency>
 ```
 
 Overall, this is a pretty slim package, but can be a useful building block within more complex patterns. Pull requests 

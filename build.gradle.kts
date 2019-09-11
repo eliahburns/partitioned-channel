@@ -1,14 +1,20 @@
+import com.jfrog.bintray.gradle.BintrayExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.3.50"
+    java
+    maven
+    `maven-publish`
+    id("com.jfrog.bintray") version "1.8.1"
 }
 
+
 group = "io.github.eliahburns"
-version = "0.1.0-SNAPSHOT"
+version = "0.1.0"
 
 repositories {
-    mavenCentral()
+    jcenter()
     maven(url = "https://jitpack.io")
 }
 
@@ -39,4 +45,57 @@ tasks {
     }
 }
 
+//artifacts {
+//    archives(tasks.jar.get())
+//}
+
+publishing {
+    publications {
+        register(rootProject.name, MavenPublication::class) {
+            from(components["kotlin"])
+            //artifact(tasks.jar.get())
+            groupId = project.group as String
+            artifactId = rootProject.name
+            version = project.version as String
+            pom {
+                licenses {
+                    license {
+                        name.set("GPL-3.0")
+                        url.set("https://github.com/eliahburns/partitioned-channel/blob/master/LICENSE")
+                    }
+                }
+                developers {
+                    developer {
+                        name.set("Eliah Burns")
+                        email.set("eli.s.burns@gmail.com")
+                    }
+
+                }
+                scm {
+                    url.set("https://github.com/eliahburns/partitioned-channel")
+                }
+            }
+        }
+    }
+    repositories {
+        maven(url = "https://bintray.com/eliahburns")
+    }
+}
+
+configure<BintrayExtension> {
+    user = findProperty("BINTRAY_USER") as? String
+    key = findProperty("BINTRAY_API_KEY") as? String
+    setPublications(rootProject.name)
+    publish = true
+    pkg(delegateClosureOf<BintrayExtension.PackageConfig> {
+        repo = "maven"
+        name = "partitioned-channel"
+        desc = "Kotlin Library for applying parallel actions to a Channel or Flow while maintaining ordering in partitions"
+        vcsUrl = "https://github.com/eliahburns/partitioned-channel"
+        setLicenses("GPL-3.0")
+        version(delegateClosureOf<BintrayExtension.VersionConfig> {
+            name = project.version as String
+        })
+    })
+}
 
