@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.3.50"
     java
-    maven
     `maven-publish`
     id("com.jfrog.bintray") version "1.8.1"
 }
@@ -45,15 +44,10 @@ tasks {
     }
 }
 
-//artifacts {
-//    archives(tasks.jar.get())
-//}
-
 publishing {
     publications {
         register(rootProject.name, MavenPublication::class) {
             from(components["kotlin"])
-            //artifact(tasks.jar.get())
             groupId = project.group as String
             artifactId = rootProject.name
             version = project.version as String
@@ -73,6 +67,7 @@ publishing {
                 }
                 scm {
                     url.set("https://github.com/eliahburns/partitioned-channel")
+                    connection.set("scm:git:https://github.com/eliahburns/partitioned-channel")
                 }
             }
         }
@@ -91,7 +86,8 @@ configure<BintrayExtension> {
         repo = "maven"
         name = "partitioned-channel"
         desc = "Kotlin Library for applying parallel actions to a Channel or Flow while maintaining ordering in partitions"
-        vcsUrl = "https://github.com/eliahburns/partitioned-channel"
+        vcsUrl = "https://github.com/eliahburns/partitioned-channel.git"
+        websiteUrl = "https://eliahburns.github.io/partitioned-channel/"
         setLicenses("GPL-3.0")
         version(delegateClosureOf<BintrayExtension.VersionConfig> {
             name = project.version as String
