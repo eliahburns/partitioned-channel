@@ -5,6 +5,7 @@ import io.github.eliahburns.partition.channel.mapAndFlattenToChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
@@ -67,14 +68,7 @@ internal inline fun <E, R> PartitionedChannel<E>.mapAndFlattenToFlow(
             }
         }
     }
-
-    invokeOnClose {
-        if (it != null) {
-            this@mapAndFlattenToFlow.close()
-        } else {
-            this@mapAndFlattenToFlow.close(it)
-        }
-    }
+    awaitClose { this@mapAndFlattenToFlow.close() }
 }
 
 
