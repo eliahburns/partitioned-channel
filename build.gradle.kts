@@ -24,7 +24,7 @@ dependencies {
 
     implementation("io.github.microutils:kotlin-logging:1.7.4")
 
-    implementation("org.slf4j:slf4j-simple:1.7.26")
+    testImplementation("org.slf4j:slf4j-simple:1.7.26")
 
     testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.2")
     testCompile("junit", "junit", "4.12")
